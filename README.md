@@ -32,8 +32,6 @@ The following modules are 100% verified and production-ready:
 ## 📈 Roadmap (What's Next)
 
 I am currently expanding the engine with these advanced capabilities:
-
-- [ ] **The "Showcase" Mode:** Packaging this into a beautiful portfolio frontend to land those ₹10k/month targets.
 - [ ] **Advanced Filtering:** Implementing search and tags for project discovery.
 - [ ] **Cloud Storage Integration:** Connecting project assets directly to Supabase Storage.
 
