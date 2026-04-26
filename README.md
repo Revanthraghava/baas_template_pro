@@ -12,12 +12,15 @@ As a freelancer, time is literally money. My goal was to build a system that ach
 - **Rock-Solid Security:** I've implemented industry-standard Bcrypt hashing and JWT authentication from day one. No shortcuts.
 - **Automated Everything:** With the `build_it_all.py` script, the entire database schema and folder structure are handled for you.
 
-## 🛠️ What's Under the Hood?
+## ✨ Core Features (Production-Ready)
 
-- **FastAPI:** For that lightning-fast performance.
-- **Supabase (PostgreSQL):** A professional-grade database that lives in the cloud.
-- **Bcrypt & JOSE:** Keeping user data safe with salted hashes and secure tokens.
-- **SQLAlchemy:** So we can talk to our database using clean, readable Python code.
+This engine is engineered for high-performance freelance delivery, ensuring every project is secure, scalable, and professional from day one:
+
+- **🔐 Production-Grade Security:** Implements the official **OAuth2 Password Flow** with **JWT (JSON Web Tokens)** and salted **Bcrypt** hashing. Your user data is protected by industry-standard protocols.
+- **🛡️ Multi-Tenant Architecture:** Built-in secure data isolation. Every request is context-aware, ensuring users only interact with their own data—perfect for SaaS and portfolio management.
+- **⚡ Automated Scaffolding:** Go from a fresh clone to a live API in seconds. The `build_it_all.py` script handles directory structures, database syncing, and environment setup automatically.
+- **☁️ Cloud-Native & Zero Cost:** Fully integrated with **Supabase (PostgreSQL)**. Leverage a professional-grade cloud database while staying completely within the free tier.
+- **📖 Interactive API Documentation:** Ship with pride. The built-in **Swagger UI** provides interactive documentation that allows clients to test endpoints instantly without writing a line of code.
 
 ## 📈 Where We Are & Where We're Going
 

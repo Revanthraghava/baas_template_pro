@@ -7,7 +7,7 @@ os.chdir(Path(__file__).parent)
 sys.path.append(os.getcwd())
 
 def check_dependencies():
-    deps = ["sqlalchemy", "fastapi", "pydantic", "dotenv", "psycopg2", "passlib", "jose"]
+    deps = ["sqlalchemy", "fastapi", "pydantic", "dotenv", "psycopg2", "passlib", "jose", "multipart"]
     missing = []
     for dep in deps:
         try:
@@ -17,6 +17,8 @@ def check_dependencies():
                 import psycopg2
             elif dep == "jose":
                 import jose
+            elif dep == "multipart":
+                import multipart
             else:
                 __import__(dep)
         except ImportError:
@@ -24,7 +26,7 @@ def check_dependencies():
     
     if missing:
         print(f"--- Warning: Missing dependencies: {', '.join(missing)} ---")
-        print("Please run: pip install sqlalchemy fastapi[all] python-dotenv psycopg2-binary passlib[bcrypt] python-jose[cryptography]")
+        print("Please run: pip install sqlalchemy fastapi[all] python-dotenv psycopg2-binary passlib[bcrypt] python-jose[cryptography] python-multipart")
         print("------------------------------------------------------------\n")
 
 def create_file(path, content):
@@ -103,6 +105,7 @@ def create_access_token(subject: Union[str, Any], expires_delta: timedelta = Non
 
 USER_MODEL_PY = """
 from sqlalchemy import Column, Integer, String
+from sqlalchemy.orm import relationship
 from app.core.database import Base
 
 class User(Base):
@@ -112,6 +115,25 @@ class User(Base):
     name = Column(String)
     email = Column(String, unique=True, index=True)
     password = Column(String)
+
+    projects = relationship("Project", back_populates="owner")
+"""
+
+PROJECT_MODEL_PY = """
+from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.orm import relationship
+from app.core.database import Base
+
+class Project(Base):
+    __tablename__ = "projects"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, index=True)
+    description = Column(String)
+    link = Column(String)
+    owner_id = Column(Integer, ForeignKey("users.id"))
+
+    owner = relationship("User", back_populates="projects")
 """
 
 USER_SCHEMA_PY = """
@@ -135,15 +157,57 @@ class User(UserBase):
         from_attributes = True
 """
 
+PROJECT_SCHEMA_PY = """
+from pydantic import BaseModel
+from typing import Optional
+
+class ProjectBase(BaseModel):
+    title: str
+    description: Optional[str] = None
+    link: Optional[str] = None
+
+class ProjectCreate(ProjectBase):
+    pass
+
+class Project(ProjectBase):
+    id: int
+    owner_id: int
+
+    class Config:
+        from_attributes = True
+"""
+
 AUTH_API_PY = """
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from jose import JWTError, jwt
 from app.core.database import get_db
 from app.models.user import User as UserModel
-from app.schemas.user import User, UserCreate, UserLogin
-from app.core.security import get_password_hash, verify_password, create_access_token
+from app.schemas.user import User, UserCreate
+from app.core.security import get_password_hash, verify_password, create_access_token, SECRET_KEY, ALGORITHM
 
 router = APIRouter()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    
+    user = db.query(UserModel).filter(UserModel.email == email).first()
+    if user is None:
+        raise credentials_exception
+    return user
 
 @router.post("/signup", response_model=User)
 def signup(user: UserCreate, db: Session = Depends(get_db)):
@@ -160,10 +224,10 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
     return new_user
 
 @router.post("/login")
-def login(user: UserLogin, db: Session = Depends(get_db)):
-    db_user = db.query(UserModel).filter(UserModel.email == user.email).first()
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    db_user = db.query(UserModel).filter(UserModel.email == form_data.username).first()
     
-    if not db_user or not verify_password(user.password, db_user.password):
+    if not db_user or not verify_password(form_data.password, db_user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials",
@@ -178,10 +242,45 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
     }
 """
 
+PROJECT_API_PY = """
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from typing import List
+from app.core.database import get_db
+from app.models.project import Project as ProjectModel
+from app.models.user import User as UserModel
+from app.schemas.project import Project, ProjectCreate
+from app.api.auth import get_current_user
+
+router = APIRouter()
+
+@router.post("/", response_model=Project)
+def create_project(
+    project: ProjectCreate, 
+    db: Session = Depends(get_db), 
+    current_user: UserModel = Depends(get_current_user)
+):
+    # Single ProjectCreate object expected, returning single Project
+    db_project = ProjectModel(**project.model_dump(), owner_id=current_user.id)
+    db.add(db_project)
+    db.commit()
+    db.refresh(db_project)
+    return db_project
+
+@router.get("/", response_model=List[Project])
+def read_projects(
+    db: Session = Depends(get_db), 
+    current_user: UserModel = Depends(get_current_user)
+):
+    projects = db.query(ProjectModel).filter(ProjectModel.owner_id == current_user.id).all()
+    return projects
+"""
+
 MAIN_PY = """
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from app.api.auth import router as auth_router
+from app.api.projects import router as projects_router
 import traceback
 
 app = FastAPI(title="BaaS Pro API")
@@ -198,6 +297,7 @@ async def catch_exceptions_middleware(request: Request, call_next):
         )
 
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
+app.include_router(projects_router, prefix="/projects", tags=["Projects"])
 
 @app.get("/")
 def read_root():
@@ -215,8 +315,11 @@ files = {
     "app/core/database.py": DATABASE_PY,
     "app/core/security.py": SECURITY_PY,
     "app/models/user.py": USER_MODEL_PY,
+    "app/models/project.py": PROJECT_MODEL_PY,
     "app/schemas/user.py": USER_SCHEMA_PY,
+    "app/schemas/project.py": PROJECT_SCHEMA_PY,
     "app/api/auth.py": AUTH_API_PY,
+    "app/api/projects.py": PROJECT_API_PY,
     "app/main.py": MAIN_PY,
 }
 
