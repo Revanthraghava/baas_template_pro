@@ -32,6 +32,9 @@ The following modules are 100% verified and production-ready:
 ## 📈 Roadmap (What's Next)
 
 I am currently expanding the engine with these advanced capabilities:
+
+- [ ] **🚀 Live Deployment:** Hosting this on Render or Railway for global availability.
+- [ ] **🌍 Public Portfolio Endpoint:** Creating an "unlocked" route to allow public viewing of specific user projects.
 - [ ] **Advanced Filtering:** Implementing search and tags for project discovery.
 - [ ] **Cloud Storage Integration:** Connecting project assets directly to Supabase Storage.
 
