@@ -326,17 +326,24 @@ files = {
 for path, content in files.items():
     create_file(path, content)
 
-print("\\nAttempting database sync...")
+print("\nAttempting database sync...")
 try:
     import importlib
-    # Force reload of core modules
-    modules_to_reload = ['app.core.database', 'app.models.user', 'app.core.security']
+    # Force reload of core modules to ensure fresh metadata
+    modules_to_reload = [
+        'app.core.database', 
+        'app.models.user', 
+        'app.models.project', 
+        'app.core.security'
+    ]
     for mod in modules_to_reload:
         if mod in sys.modules:
             importlib.reload(sys.modules[mod])
         
     from app.core.database import Base, engine
+    # Importing models here ensures they are registered with Base.metadata
     from app.models.user import User
+    from app.models.project import Project
     
     Base.metadata.create_all(bind=engine)
     print("Database sync successful!")
