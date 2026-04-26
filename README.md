@@ -22,13 +22,20 @@ This engine is engineered for high-performance freelance delivery, ensuring ever
 - **☁️ Cloud-Native & Zero Cost:** Fully integrated with **Supabase (PostgreSQL)**. Leverage a professional-grade cloud database while staying completely within the free tier.
 - **📖 Interactive API Documentation:** Ship with pride. The built-in **Swagger UI** provides interactive documentation that allows clients to test endpoints instantly without writing a line of code.
 
-## 📈 Where We Are & Where We're Going
+## ✅ Core Features Implemented
 
-I've already nailed the core **Security Engine**. You can sign up, log in, and get a secure token right out of the box.
+The following modules are 100% verified and production-ready:
 
-**What's next on my list:**
-- [ ] **Digital Asset Manager:** A dedicated system to store and manage portfolio items.
-- [ ] **Lock & Key (Protected Routes):** Ensuring only authorized users can touch sensitive data.
+- **📁 Digital Asset Manager:** Full CRUD support for user projects with automatic `owner_id` linking.
+- **🛡️ Protected Routes:** Verified OAuth2 & JWT enforcement across all asset endpoints.
+
+## 📈 Roadmap (What's Next)
+
+I am currently expanding the engine with these advanced capabilities:
+
+- [ ] **The "Showcase" Mode:** Packaging this into a beautiful portfolio frontend to land those ₹10k/month targets.
+- [ ] **Advanced Filtering:** Implementing search and tags for project discovery.
+- [ ] **Cloud Storage Integration:** Connecting project assets directly to Supabase Storage.
 
 ## 🤝 Let's Connect
 This project is part of my journey to streamline development and hit my personal milestones. If you're a developer looking to move faster or a client looking for a solid backend, I'd love to chat!
