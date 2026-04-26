@@ -26,7 +26,6 @@ I've already nailed the core **Security Engine**. You can sign up, log in, and g
 **What's next on my list:**
 - [ ] **Digital Asset Manager:** A dedicated system to store and manage portfolio items.
 - [ ] **Lock & Key (Protected Routes):** Ensuring only authorized users can touch sensitive data.
-- [ ] **The "Showcase" Mode:** Packaging this into a beautiful portfolio to land those ₹10k/month targets.
 
 ## 🤝 Let's Connect
 This project is part of my journey to streamline development and hit my personal milestones. If you're a developer looking to move faster or a client looking for a solid backend, I'd love to chat!
